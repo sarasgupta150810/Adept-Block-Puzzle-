@@ -1,0 +1,6 @@
+{
+  "name": "Block Evolution",
+  "description": "Addictive hexagonal block puzzle game with evolutionary number merges, line clears, combo multipliers, challenges, and dynamic sound effects.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

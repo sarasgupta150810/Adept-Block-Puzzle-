@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Block Evolution</string>
+    <string name="play_game">PLAY GAME</string>
+    <string name="challenges">CHALLENGES</string>
+    <string name="settings">SETTINGS</string>
+    <string name="sound">SOUND</string>
+    <string name="score">SCORE</string>
+    <string name="high_score">HIGH SCORE</string>
+    <string name="pause">PAUSE</string>
+    <string name="resume">RESUME</string>
+    <string name="restart">RESTART</string>
+    <string name="quit">QUIT</string>
+    <string name="music">MUSIC</string>
+    <string name="sound_fx">SOUND FX</string>
+    <string name="brightness">BRIGHTNESS</string>
+    <string name="level_complete">LEVEL COMPLETE</string>
+    <string name="next_level">NEXT LEVEL</string>
+    <string name="level_failed">LEVEL FAILED</string>
+    <string name="retry">RETRY</string>
+    <string name="next_blocks">NEXT BLOCKS</string>
+</resources>
