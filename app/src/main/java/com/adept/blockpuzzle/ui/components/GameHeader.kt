@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.adept.blockpuzzle.model.GameMode
 import com.adept.blockpuzzle.model.LevelTarget
+import com.adept.blockpuzzle.model.ShapeMosaicCatalog
 import com.adept.blockpuzzle.ui.theme.HexColors
 import java.text.NumberFormat
 import java.util.Locale
@@ -45,6 +46,10 @@ fun GameHeader(
     comboStreak: Int = 0,
     comboMultiplier: Int = 1,
     coins: Int = 0,
+    infiniteTargetScore: Int = 500,
+    currentShapeIndex: Int = 0,
+    currentShapeFilledBlocks: Int = 0,
+    activeTheme: com.adept.blockpuzzle.model.GameTheme = com.adept.blockpuzzle.model.GameTheme.CYBER_NEON,
     onPauseClick: () -> Unit
 ) {
     val formatter = NumberFormat.getNumberInstance(Locale.US)
@@ -229,8 +234,68 @@ fun GameHeader(
             }
         }
 
+        // In Classic Infinite mode, show Level Milestone & Shape Wonder Progress
+        if (gameMode == GameMode.CLASSIC) {
+            val currentShape = ShapeMosaicCatalog.getShape(currentShapeIndex)
+            val (shapePrimary, _) = currentShape.getThemeColors(activeTheme)
+            val progressFraction = (score.toFloat() / infiniteTargetScore.toFloat()).coerceIn(0f, 1f)
+            Spacer(modifier = Modifier.height(6.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xDD1E293B))
+                    .border(1.5.dp, activeTheme.accentColor, RoundedCornerShape(12.dp))
+                    .padding(horizontal = 12.dp, vertical = 5.dp)
+                    .testTag("infinite_level_bar")
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "LEVEL $levelNumber  [Next: ${formatter.format(infiniteTargetScore)}]",
+                            color = Color.White,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "${currentShape.iconEmoji} ${currentShape.name}: ${currentShapeFilledBlocks}/${currentShape.totalBlocks}",
+                            color = shapePrimary,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    // Progress bar towards next level
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(5.dp)
+                            .clip(RoundedCornerShape(2.5.dp))
+                            .background(Color(0xFF334155))
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(progressFraction)
+                                .height(5.dp)
+                                .clip(RoundedCornerShape(2.5.dp))
+                                .background(
+                                    Brush.horizontalGradient(
+                                        listOf(activeTheme.accentColor, Color(0xFF22C55E))
+                                    )
+                                )
+                        )
+                    }
+                }
+            }
+        }
+
         // In Challenge mode, show Level Goal Banner
         if (gameMode == GameMode.CHALLENGE && levelTarget != null) {
+            val currentShape = ShapeMosaicCatalog.getShape(currentShapeIndex)
             Spacer(modifier = Modifier.height(6.dp))
             Box(
                 modifier = Modifier
@@ -261,7 +326,7 @@ fun GameHeader(
                         }
                     }
                     Text(
-                        text = goalText,
+                        text = "$goalText | ${currentShape.iconEmoji} $currentShapeFilledBlocks/${currentShape.totalBlocks}",
                         color = HexColors.AccentYellow,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.ExtraBold

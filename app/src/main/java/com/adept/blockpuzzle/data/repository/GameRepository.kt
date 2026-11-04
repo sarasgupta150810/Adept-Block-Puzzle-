@@ -107,4 +107,15 @@ class GameRepository(private val gameDao: GameDao) {
         }
         return false
     }
+
+    suspend fun saveShapeProgress(currentShapeIndex: Int, currentShapeFilledBlocks: Int, totalShapesCompleted: Int) {
+        val current = economy.first()
+        gameDao.saveEconomy(
+            current.copy(
+                currentShapeIndex = currentShapeIndex,
+                currentShapeFilledBlocks = currentShapeFilledBlocks,
+                totalShapesCompleted = totalShapesCompleted
+            )
+        )
+    }
 }

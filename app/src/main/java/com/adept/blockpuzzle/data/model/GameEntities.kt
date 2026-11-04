@@ -42,5 +42,8 @@ data class UserEconomyEntity(
     val ownedThemes: String = "cyber_neon", // comma-separated theme IDs
     val activeTheme: String = "cyber_neon",
     val lastDailyRewardClaimTime: Long = 0L,
-    val lastAdRewardClaimTime: Long = 0L
+    val lastAdRewardClaimTime: Long = 0L,
+    val totalShapesCompleted: Int = 0,
+    val currentShapeIndex: Int = 0,
+    val currentShapeFilledBlocks: Int = 0
 )

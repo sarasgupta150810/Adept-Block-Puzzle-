@@ -11,7 +11,7 @@ import com.adept.blockpuzzle.data.model.UserEconomyEntity
 
 @Database(
     entities = [GameRecordEntity::class, GameSettingEntity::class, DailyChallengeEntity::class, UserEconomyEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

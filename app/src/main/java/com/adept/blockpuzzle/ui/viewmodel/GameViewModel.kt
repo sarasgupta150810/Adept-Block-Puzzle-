@@ -29,6 +29,9 @@ import com.adept.blockpuzzle.model.GameTheme
 import com.adept.blockpuzzle.model.HexCoord
 import com.adept.blockpuzzle.model.HexPiece
 import com.adept.blockpuzzle.model.LevelTarget
+import com.adept.blockpuzzle.model.ShapeLevelUpReward
+import com.adept.blockpuzzle.model.ShapeMosaic
+import com.adept.blockpuzzle.model.ShapeMosaicCatalog
 import com.adept.blockpuzzle.ui.theme.HexColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -80,7 +83,12 @@ data class GameUiState(
     val lastAdRewardClaimTime: Long = 0L,
     val canClaimDailyReward: Boolean = true,
     val canClaimAdReward: Boolean = true,
-    val rewardNotification: String? = null
+    val rewardNotification: String? = null,
+    val currentShapeIndex: Int = 0,
+    val currentShapeFilledBlocks: Int = 0,
+    val totalShapesCompleted: Int = 0,
+    val infiniteLevelTargetScore: Int = 500,
+    val shapeLevelUpReward: ShapeLevelUpReward? = null
 )
 
 class GameViewModel(application: Application) : AndroidViewModel(application) {
@@ -199,7 +207,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     lastDailyRewardClaimTime = eco.lastDailyRewardClaimTime,
                     lastAdRewardClaimTime = eco.lastAdRewardClaimTime,
                     canClaimDailyReward = canDaily,
-                    canClaimAdReward = canAd
+                    canClaimAdReward = canAd,
+                    currentShapeIndex = eco.currentShapeIndex,
+                    currentShapeFilledBlocks = eco.currentShapeFilledBlocks,
+                    totalShapesCompleted = eco.totalShapesCompleted
                 )
             }
         }
@@ -219,12 +230,22 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         startNewClassicGame()
     }
 
+    fun getInfiniteLevelTargetScore(level: Int): Int {
+        var total = 0
+        for (i in 1..level) {
+            total += 350 + (i * 120) + (i * i * 15)
+        }
+        return total
+    }
+
     fun startNewClassicGame() {
         val freshPieces = HexPieceGenerator.generatePieces(emptyMap(), 1, 3)
         _uiState.value = _uiState.value.copy(
             gameMode = GameMode.CLASSIC,
             currentLevelNumber = 1,
             levelTarget = null,
+            infiniteLevelTargetScore = getInfiniteLevelTargetScore(1),
+            shapeLevelUpReward = null,
             score = 0,
             stars = 0,
             linesClearedTotal = 0,
@@ -254,6 +275,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             gameMode = GameMode.CHALLENGE,
             currentLevelNumber = levelNumber,
             levelTarget = target,
+            shapeLevelUpReward = null,
             score = 0,
             highScore = bestScore,
             stars = 0,
@@ -283,6 +305,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             gameMode = GameMode.DAILY_CHALLENGE,
             currentLevelNumber = 9999,
             levelTarget = target,
+            shapeLevelUpReward = null,
             score = 0,
             highScore = _uiState.value.dailyBestScore,
             stars = 0,
@@ -469,8 +492,74 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
         var newStatus = GameStatus.PLAYING
         var starsEarned = 0
+        var shapeReward: ShapeLevelUpReward? = null
+        var nextShapeIndex = _uiState.value.currentShapeIndex
+        var nextFilledBlocks = _uiState.value.currentShapeFilledBlocks
+        var nextTotalShapes = _uiState.value.totalShapesCompleted
+        var nextLevelNumber = _uiState.value.currentLevelNumber
+        var nextInfiniteTarget = _uiState.value.infiniteLevelTargetScore
 
-        if (result.isLevelComplete && _uiState.value.levelTarget != null) {
+        // 1. Check score-based level progression in Infinite (CLASSIC) play
+        if (_uiState.value.gameMode == GameMode.CLASSIC && newScore >= _uiState.value.infiniteLevelTargetScore) {
+            newStatus = GameStatus.LEVEL_COMPLETE
+            val completedLevel = _uiState.value.currentLevelNumber
+            nextLevelNumber = completedLevel + 1
+            nextInfiniteTarget = getInfiniteLevelTargetScore(nextLevelNumber)
+
+            val currentShape = ShapeMosaicCatalog.getShape(nextShapeIndex)
+            val newlyFilled = nextFilledBlocks
+            val afterFillCount = nextFilledBlocks + 1
+            val isShapeDone = afterFillCount >= currentShape.totalBlocks
+
+            val baseCoins = 100
+            val shapeBonusCoins = if (isShapeDone) 250 else 0
+            val totalCoinsEarned = baseCoins + shapeBonusCoins
+
+            shapeReward = ShapeLevelUpReward(
+                levelNumber = completedLevel,
+                score = newScore,
+                shape = currentShape,
+                previouslyFilledCount = nextFilledBlocks,
+                newlyFilledIndex = newlyFilled,
+                isShapeFullyCompleted = isShapeDone,
+                coinsEarned = totalCoinsEarned,
+                isInfiniteMode = true
+            )
+
+            if (isShapeDone) {
+                nextShapeIndex = (nextShapeIndex + 1) % ShapeMosaicCatalog.allShapes.size
+                nextFilledBlocks = 0
+                nextTotalShapes += 1
+                soundManager.playShapeComplete()
+            } else {
+                nextFilledBlocks = afterFillCount
+                soundManager.playBlockFill(newlyFilled)
+            }
+            soundManager.playWin()
+            performHaptic(HapticType.VICTORY)
+
+            particleSystem.spawnConfetti(boardCenter.x * 2f, boardCenter.y * 2f, count = 60)
+            particleSystem.spawnFloatingText(
+                text = "LEVEL $completedLevel COMPLETE! 🏆",
+                position = Offset(boardCenter.x, boardCenter.y - 120f),
+                color = HexColors.AccentYellow,
+                sizeSp = 28f
+            )
+
+            viewModelScope.launch {
+                repository.addCoins(totalCoinsEarned)
+                if (isShapeDone) {
+                    val currentEco = repository.economy.first()
+                    repository.saveEconomy(currentEco.copy(hammersCount = currentEco.hammersCount + 1))
+                }
+                repository.saveShapeProgress(
+                    currentShapeIndex = nextShapeIndex,
+                    currentShapeFilledBlocks = nextFilledBlocks,
+                    totalShapesCompleted = nextTotalShapes
+                )
+                repository.saveClassicHighScore(newScore, result.highestTierReached)
+            }
+        } else if (result.isLevelComplete && _uiState.value.levelTarget != null) {
             newStatus = GameStatus.LEVEL_COMPLETE
             starsEarned = LevelCatalog.calculateStars(
                 _uiState.value.levelTarget!!,
@@ -478,19 +567,59 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 result.highestTierReached,
                 _uiState.value.linesClearedTotal + result.linesClearedCount
             ).coerceAtLeast(1)
+
+            val completedLevel = _uiState.value.currentLevelNumber
+            val currentShape = ShapeMosaicCatalog.getShape(nextShapeIndex)
+            val newlyFilled = nextFilledBlocks
+            val afterFillCount = nextFilledBlocks + 1
+            val isShapeDone = afterFillCount >= currentShape.totalBlocks
+
+            val baseCoins = starsEarned * 50
+            val shapeBonusCoins = if (isShapeDone) 250 else 0
+            val totalCoinsEarned = baseCoins + shapeBonusCoins
+
+            shapeReward = ShapeLevelUpReward(
+                levelNumber = completedLevel,
+                score = newScore,
+                shape = currentShape,
+                previouslyFilledCount = nextFilledBlocks,
+                newlyFilledIndex = newlyFilled,
+                isShapeFullyCompleted = isShapeDone,
+                coinsEarned = totalCoinsEarned,
+                isInfiniteMode = false
+            )
+
+            if (isShapeDone) {
+                nextShapeIndex = (nextShapeIndex + 1) % ShapeMosaicCatalog.allShapes.size
+                nextFilledBlocks = 0
+                nextTotalShapes += 1
+                soundManager.playShapeComplete()
+            } else {
+                nextFilledBlocks = afterFillCount
+                soundManager.playBlockFill(newlyFilled)
+            }
+
             soundManager.playWin()
             performHaptic(HapticType.VICTORY)
             particleSystem.spawnConfetti(boardCenter.x * 2f, boardCenter.y * 2f, count = 60)
 
-            val levelCoins = starsEarned * 50
             particleSystem.spawnFloatingText(
-                text = "+$levelCoins 🪙 VICTORY BONUS!",
+                text = "+$totalCoinsEarned 🪙 VICTORY BONUS!",
                 position = Offset(boardCenter.x, boardCenter.y - 110f),
                 color = Color(0xFFFFD700),
                 sizeSp = 26f
             )
             viewModelScope.launch {
-                repository.addCoins(levelCoins)
+                repository.addCoins(totalCoinsEarned)
+                if (isShapeDone) {
+                    val currentEco = repository.economy.first()
+                    repository.saveEconomy(currentEco.copy(hammersCount = currentEco.hammersCount + 1))
+                }
+                repository.saveShapeProgress(
+                    currentShapeIndex = nextShapeIndex,
+                    currentShapeFilledBlocks = nextFilledBlocks,
+                    totalShapesCompleted = nextTotalShapes
+                )
             }
 
             if (_uiState.value.gameMode == GameMode.DAILY_CHALLENGE) {
@@ -558,7 +687,13 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             hoverAnchor = null,
             isHoverValid = false,
             gameStatus = newStatus,
-            stars = starsEarned
+            stars = starsEarned,
+            shapeLevelUpReward = shapeReward,
+            currentLevelNumber = nextLevelNumber,
+            infiniteLevelTargetScore = nextInfiniteTarget,
+            currentShapeIndex = nextShapeIndex,
+            currentShapeFilledBlocks = nextFilledBlocks,
+            totalShapesCompleted = nextTotalShapes
         )
     }
 
@@ -582,13 +717,44 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun continueInfiniteRun() {
+        _uiState.value = _uiState.value.copy(
+            shapeLevelUpReward = null,
+            gameStatus = GameStatus.PLAYING
+        )
+        soundManager.playPickup()
+        performHaptic(HapticType.LIGHT)
+    }
+
     fun nextLevel() {
+        _uiState.value = _uiState.value.copy(shapeLevelUpReward = null)
         if (_uiState.value.gameMode == GameMode.DAILY_CHALLENGE) {
             startDailyChallenge()
+        } else if (_uiState.value.gameMode == GameMode.CLASSIC) {
+            continueInfiniteRun()
         } else {
-            // Infinite level progression
+            // Level progression
             startLevel(_uiState.value.currentLevelNumber + 1)
         }
+    }
+
+    fun onAppForegrounded() {
+        if (_uiState.value.musicEnabled) {
+            soundManager.resumeMusic()
+        }
+    }
+
+    fun onAppBackgrounded() {
+        soundManager.pauseMusic()
+    }
+
+    fun onAppDestroyed() {
+        soundManager.release()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        soundManager.release()
     }
 
     fun openSettings() {

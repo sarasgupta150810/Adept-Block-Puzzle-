@@ -33,6 +33,7 @@ import com.adept.blockpuzzle.ui.components.LevelCompleteDialog
 import com.adept.blockpuzzle.ui.components.NextBlocksTray
 import com.adept.blockpuzzle.ui.components.PauseDialog
 import com.adept.blockpuzzle.ui.components.SettingsDialog
+import com.adept.blockpuzzle.ui.components.ShapeLevelCompleteDialog
 import com.adept.blockpuzzle.ui.components.SkyHexBokehBackground
 import com.adept.blockpuzzle.ui.viewmodel.GameViewModel
 
@@ -90,6 +91,10 @@ fun GameScreen(
                 comboStreak = uiState.comboStreak,
                 comboMultiplier = uiState.activeComboMultiplier,
                 coins = uiState.coins,
+                infiniteTargetScore = uiState.infiniteLevelTargetScore,
+                currentShapeIndex = uiState.currentShapeIndex,
+                currentShapeFilledBlocks = uiState.currentShapeFilledBlocks,
+                activeTheme = uiState.activeTheme,
                 onPauseClick = { viewModel.pauseGame() }
             )
 
@@ -221,13 +226,29 @@ fun GameScreen(
         }
 
         if (uiState.gameStatus == GameStatus.LEVEL_COMPLETE) {
-            LevelCompleteDialog(
-                levelNumber = uiState.currentLevelNumber,
-                score = uiState.score,
-                stars = uiState.stars,
-                onNextLevel = { viewModel.nextLevel() },
-                onClose = onQuitToMenu
-            )
+            val reward = uiState.shapeLevelUpReward
+            if (reward != null) {
+                ShapeLevelCompleteDialog(
+                    reward = reward,
+                    activeTheme = uiState.activeTheme,
+                    onContinue = {
+                        if (reward.isInfiniteMode) {
+                            viewModel.continueInfiniteRun()
+                        } else {
+                            viewModel.nextLevel()
+                        }
+                    },
+                    onClose = onQuitToMenu
+                )
+            } else {
+                LevelCompleteDialog(
+                    levelNumber = uiState.currentLevelNumber,
+                    score = uiState.score,
+                    stars = uiState.stars,
+                    onNextLevel = { viewModel.nextLevel() },
+                    onClose = onQuitToMenu
+                )
+            }
         }
 
         if (uiState.gameStatus == GameStatus.GAME_OVER) {

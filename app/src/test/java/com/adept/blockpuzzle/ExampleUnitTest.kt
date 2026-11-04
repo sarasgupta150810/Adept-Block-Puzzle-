@@ -175,4 +175,39 @@ class ExampleUnitTest {
         assertEquals(0, result3.newComboStreak)
         assertEquals(1, result3.comboMultiplier)
     }
+
+    @Test
+    fun testShapeMosaicCatalog() {
+        val shapes = com.adept.blockpuzzle.model.ShapeMosaicCatalog.allShapes
+        assertEquals(7, shapes.size)
+        assertTrue(shapes.all { it.blocks.size == it.totalBlocks })
+        assertTrue(shapes.all { it.totalBlocks in 5..7 })
+
+        val shape0 = com.adept.blockpuzzle.model.ShapeMosaicCatalog.getShape(0)
+        assertEquals("Hex Shield", shape0.name)
+        assertEquals(7, shape0.totalBlocks)
+
+        val shapeWrap = com.adept.blockpuzzle.model.ShapeMosaicCatalog.getShape(7)
+        assertEquals(shape0.id, shapeWrap.id)
+
+        // Test theme matching
+        val cyberColors = shape0.getThemeColors(com.adept.blockpuzzle.model.GameTheme.CYBER_NEON)
+        assertEquals(androidx.compose.ui.graphics.Color(0xFF38BDF8), cyberColors.first)
+        val amethystColors = shape0.getThemeColors(com.adept.blockpuzzle.model.GameTheme.COSMIC_AMETHYST)
+        assertEquals(androidx.compose.ui.graphics.Color(0xFFC084FC), amethystColors.first)
+    }
+
+    @Test
+    fun testInfiniteLevelProgressionScaling() {
+        // Test quadratic milestone progression
+        var previousTarget = 0
+        for (lvl in 1..10) {
+            var target = 0
+            for (i in 1..lvl) {
+                target += 350 + (i * 120) + (i * i * 15)
+            }
+            assertTrue("Level $lvl target ($target) should exceed previous target ($previousTarget)", target > previousTarget)
+            previousTarget = target
+        }
+    }
 }

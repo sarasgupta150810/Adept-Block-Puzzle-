@@ -43,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.adept.blockpuzzle.R
+import com.adept.blockpuzzle.model.ShapeMosaicCatalog
 import com.adept.blockpuzzle.ui.components.JuicyButton
 import com.adept.blockpuzzle.ui.components.SkyHexBokehBackground
 
@@ -53,6 +54,9 @@ fun MainMenuScreen(
     isDailyCompleted: Boolean = false,
     coins: Int = 0,
     activeTheme: com.adept.blockpuzzle.model.GameTheme = com.adept.blockpuzzle.model.GameTheme.CYBER_NEON,
+    currentShapeIndex: Int = 0,
+    currentShapeFilledBlocks: Int = 0,
+    totalShapesCompleted: Int = 0,
     onPlayGame: () -> Unit,
     onPlayDaily: () -> Unit,
     onOpenChallenges: () -> Unit,
@@ -98,7 +102,7 @@ fun MainMenuScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "'com.saras.blockpuzzle'",
+                    text = "'com.adept.blockpuzzle'",
                     color = Color(0xFF1E293B).copy(alpha = 0.85f),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold
@@ -166,7 +170,66 @@ fun MainMenuScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            // Current Wonder Relic Artifact Progress Pill
+            val currentShape = ShapeMosaicCatalog.getShape(currentShapeIndex)
+            val (shapePrimary, shapeSecondary) = currentShape.getThemeColors(activeTheme)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.90f)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(activeTheme.boardBackdrop.copy(alpha = 0.95f), Color(0xDD0F172A))
+                        )
+                    )
+                    .border(1.5.dp, shapePrimary.copy(alpha = 0.7f), RoundedCornerShape(16.dp))
+                    .padding(horizontal = 14.dp, vertical = 8.dp)
+                    .testTag("menu_relic_pill")
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(text = currentShape.iconEmoji, fontSize = 20.sp)
+                        Column {
+                            Text(
+                                text = "WONDER: ${currentShape.name.uppercase()}",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color.White
+                            )
+                            Text(
+                                text = "$currentShapeFilledBlocks / ${currentShape.totalBlocks} Blocks Restored" + if (totalShapesCompleted > 0) " (Restored: $totalShapesCompleted)" else "",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = shapePrimary
+                            )
+                        }
+                    }
+
+                    // Mini filled dots
+                    Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                        for (i in 0 until currentShape.totalBlocks) {
+                            Box(
+                                modifier = Modifier
+                                    .size(7.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (i < currentShapeFilledBlocks) shapePrimary
+                                        else Color(0x44FFFFFF)
+                                    )
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
 
             // PLAY GAME BUTTON (Big Vibrant Green Pill Button, Matching Panel 1)
             JuicyButton(
