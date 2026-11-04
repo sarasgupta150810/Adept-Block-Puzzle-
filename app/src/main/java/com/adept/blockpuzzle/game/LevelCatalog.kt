@@ -19,42 +19,42 @@ object LevelCatalog {
         LevelTarget(
             levelNumber = 1,
             title = "First Steps",
-            description = "Welcome! Merge two 1s to reach Tier 2 and score 250 points.",
-            targetScore = 250,
+            description = "Welcome! Merge numbered blocks to reach Tier 2 and clear 1 full line across the board.",
+            targetScore = 600,
             targetEvolutionTier = 2,
-            targetLinesToClear = 0
-        ),
-        LevelTarget(
-            levelNumber = 2,
-            title = "First Line",
-            description = "Fill any full hex line across the board to clear 1 line!",
-            targetScore = 500,
-            targetEvolutionTier = 0,
             targetLinesToClear = 1
         ),
         LevelTarget(
-            levelNumber = 3,
-            title = "Evolution Spark",
-            description = "Keep merging numbers to synthesize a Tier 3 hexagon!",
-            targetScore = 900,
-            targetEvolutionTier = 3,
-            targetLinesToClear = 0
-        ),
-        LevelTarget(
-            levelNumber = 4,
-            title = "Twin Lines",
-            description = "Clear 2 lines in any hex direction and score 1,400 points.",
-            targetScore = 1400,
+            levelNumber = 2,
+            title = "First Lines",
+            description = "Clear 2 full hex lines and score 1,200 points to prove your line skills!",
+            targetScore = 1200,
             targetEvolutionTier = 0,
             targetLinesToClear = 2
         ),
         LevelTarget(
-            levelNumber = 5,
-            title = "Tier 3 Apprentice",
-            description = "Reach Tier 3 and clear 1 line to complete the basic training!",
-            targetScore = 2000,
+            levelNumber = 3,
+            title = "Evolution Spark",
+            description = "Merge matching numbers to synthesize a Tier 3 hexagon and score 1,800 points!",
+            targetScore = 1800,
             targetEvolutionTier = 3,
             targetLinesToClear = 1
+        ),
+        LevelTarget(
+            levelNumber = 4,
+            title = "Triple Lines",
+            description = "Clear 3 lines in any hex direction and reach 2,600 points.",
+            targetScore = 2600,
+            targetEvolutionTier = 0,
+            targetLinesToClear = 3
+        ),
+        LevelTarget(
+            levelNumber = 5,
+            title = "Tier 3 Apprentice",
+            description = "Reach Tier 3, clear 2 lines, and score 3,500 points to master basic training!",
+            targetScore = 3500,
+            targetEvolutionTier = 3,
+            targetLinesToClear = 2
         ),
 
         // === EARLY INTERMEDIATE (Levels 6 - 10) ===

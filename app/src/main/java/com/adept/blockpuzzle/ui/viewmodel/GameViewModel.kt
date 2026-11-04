@@ -233,7 +233,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     fun getInfiniteLevelTargetScore(level: Int): Int {
         var total = 0
         for (i in 1..level) {
-            total += 350 + (i * 120) + (i * i * 15)
+            total += 1200 + (i * 600) + (i * i * 60)
         }
         return total
     }
@@ -457,18 +457,19 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             )
         }
 
-        // Calculate coins earned on this move
-        val lineCoins = result.linesClearedCount * 15 * result.comboMultiplier
-        val mergeCoins = result.evolvedCoords.size * 8 * result.comboMultiplier
-        val moveCoins = lineCoins + mergeCoins
+        // Calculate coins earned on this move (balanced, meaningful coin rewards)
+        val lineCoins = result.linesClearedCount * 3
+        val mergeCoins = result.evolvedCoords.size * 2
+        val comboBonusCoins = if (result.comboMultiplier > 1) (result.comboMultiplier - 1) * 2 else 0
+        val moveCoins = lineCoins + mergeCoins + comboBonusCoins
         if (moveCoins > 0) {
             particleSystem.spawnFloatingText(
                 text = "+$moveCoins 🪙",
                 position = Offset(anchorScreenPos.x, anchorScreenPos.y - 100f),
                 color = Color(0xFFFFD700),
-                sizeSp = 24f
+                sizeSp = 22f
             )
-            particleSystem.spawnCoinSparkles(anchorScreenPos, 14)
+            particleSystem.spawnCoinSparkles(anchorScreenPos, 10)
             soundManager.playCoin()
             viewModelScope.launch {
                 repository.addCoins(moveCoins)
@@ -511,8 +512,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             val afterFillCount = nextFilledBlocks + 1
             val isShapeDone = afterFillCount >= currentShape.totalBlocks
 
-            val baseCoins = 100
-            val shapeBonusCoins = if (isShapeDone) 250 else 0
+            val baseCoins = 25
+            val shapeBonusCoins = if (isShapeDone) 75 else 0
             val totalCoinsEarned = baseCoins + shapeBonusCoins
 
             shapeReward = ShapeLevelUpReward(
@@ -574,8 +575,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             val afterFillCount = nextFilledBlocks + 1
             val isShapeDone = afterFillCount >= currentShape.totalBlocks
 
-            val baseCoins = starsEarned * 50
-            val shapeBonusCoins = if (isShapeDone) 250 else 0
+            val baseCoins = starsEarned * 15
+            val shapeBonusCoins = if (isShapeDone) 75 else 0
             val totalCoinsEarned = baseCoins + shapeBonusCoins
 
             shapeReward = ShapeLevelUpReward(
@@ -969,13 +970,13 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val currentEco = repository.economy.first()
             val updatedEco = currentEco.copy(
-                coins = currentEco.coins + 250,
+                coins = currentEco.coins + 75,
                 hammersCount = currentEco.hammersCount + 1,
                 lastDailyRewardClaimTime = now
             )
             repository.saveEconomy(updatedEco)
             _uiState.value = _uiState.value.copy(
-                rewardNotification = "Claimed Daily Mystery Gift: +250 🪙 & +1 🔨!"
+                rewardNotification = "Claimed Daily Mystery Gift: +75 🪙 & +1 🔨!"
             )
         }
     }
@@ -987,12 +988,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val currentEco = repository.economy.first()
             val updatedEco = currentEco.copy(
-                coins = currentEco.coins + 100,
+                coins = currentEco.coins + 40,
                 lastAdRewardClaimTime = now
             )
             repository.saveEconomy(updatedEco)
             _uiState.value = _uiState.value.copy(
-                rewardNotification = "Lucky Chest Opened: +100 🪙 received! 🎉"
+                rewardNotification = "Lucky Chest Opened: +40 🪙 received! 🎉"
             )
         }
     }

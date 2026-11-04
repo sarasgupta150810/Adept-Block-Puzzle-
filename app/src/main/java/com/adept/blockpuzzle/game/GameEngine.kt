@@ -88,7 +88,8 @@ object GameEngine {
                 // Move 2 with merge: 2x (or 3x on cascade)
                 // Move 3 with merge: 3x (or 4x on cascade)
                 val activeMultiplier = maxOf(1, streak + (cascadeCount - 1))
-                val evolutionPoints = valToMerge * 100 * mergeCluster.size * activeMultiplier
+                // Balanced evolution points: 20 pts per tile level instead of 100 to ensure smooth score progression
+                val evolutionPoints = valToMerge * 20 * mergeCluster.size * activeMultiplier
                 points += evolutionPoints
             }
         }
@@ -120,7 +121,8 @@ object GameEngine {
                 }
             }
 
-            val linePoints = cellsToClearFromLines.size * 50 * linesClearedCount * finalMultiplier
+            // Balanced line points: 15 pts per cleared cell with multi-line bonus (instead of 50 pts * cells * lines)
+            val linePoints = cellsToClearFromLines.size * 15 * linesClearedCount * finalMultiplier
             points += linePoints
         }
 

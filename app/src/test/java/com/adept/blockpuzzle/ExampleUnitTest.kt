@@ -93,11 +93,11 @@ class ExampleUnitTest {
         assertEquals(1, level1.levelNumber)
 
         // Base completion -> 1 star
-        val stars1 = LevelCatalog.calculateStars(level1, score = 250, highestTier = 2, linesCleared = 0)
+        val stars1 = LevelCatalog.calculateStars(level1, score = 600, highestTier = 2, linesCleared = 1)
         assertEquals(1, stars1)
 
-        // High score -> 3 stars
-        val stars3 = LevelCatalog.calculateStars(level1, score = 800, highestTier = 2, linesCleared = 0)
+        // High score -> 3 stars (1.65x target = 990+)
+        val stars3 = LevelCatalog.calculateStars(level1, score = 1200, highestTier = 2, linesCleared = 1)
         assertEquals(3, stars3)
     }
 
@@ -199,12 +199,12 @@ class ExampleUnitTest {
 
     @Test
     fun testInfiniteLevelProgressionScaling() {
-        // Test quadratic milestone progression
+        // Test quadratic milestone progression with paced increments
         var previousTarget = 0
         for (lvl in 1..10) {
             var target = 0
             for (i in 1..lvl) {
-                target += 350 + (i * 120) + (i * i * 15)
+                target += 1200 + (i * 600) + (i * i * 60)
             }
             assertTrue("Level $lvl target ($target) should exceed previous target ($previousTarget)", target > previousTarget)
             previousTarget = target

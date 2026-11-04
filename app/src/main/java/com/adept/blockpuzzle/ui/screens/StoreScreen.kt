@@ -287,9 +287,9 @@ fun StoreScreen(
                         item {
                             FreeRewardCard(
                                 title = "DAILY MYSTERY GIFT",
-                                description = "Claim your daily gift: 250 Coins + 1 Free Hammer every 24 hours!",
+                                description = "Claim your daily gift: 75 Coins + 1 Free Hammer every 24 hours!",
                                 emoji = "🎁",
-                                rewardText = "+250 🪙 & +1 🔨",
+                                rewardText = "+75 🪙 & +1 🔨",
                                 isReady = canClaimDailyReward,
                                 readyButtonText = "CLAIM FREE GIFT",
                                 waitingText = "CLAIMED FOR TODAY ✓",
@@ -300,9 +300,9 @@ fun StoreScreen(
                         item {
                             FreeRewardCard(
                                 title = "LUCKY BONUS CHEST",
-                                description = "Open the lucky chest to receive 100 free coins instantly! (Refreshes every 5m)",
+                                description = "Open the lucky chest to receive 40 free coins instantly! (Refreshes every 5m)",
                                 emoji = "💎",
-                                rewardText = "+100 🪙",
+                                rewardText = "+40 🪙",
                                 isReady = canClaimAdReward,
                                 readyButtonText = "OPEN CHEST",
                                 waitingText = "RECHARGING (5m) ⏳",
